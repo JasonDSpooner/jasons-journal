@@ -1,0 +1,10 @@
+I want to make a projetc app using vercel
+
+spec, readme, design and agent  MD files to be created
+
+i want people to log in and view there dashobard of data.  I want to use the google login.  I also want to host a place to share
+my skills and the app will be a test of using googles login.
+
+I also want to use the pollination.ai tool to create a text and image generation tool
+
+in the tool i'd like to store md journal entires and image viewer
