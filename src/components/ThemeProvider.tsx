@@ -18,13 +18,13 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("theme") as Theme
-      return saved || "dark"
+  const [theme, setThemeState] = useState<Theme>("dark")
+
+  const setTheme = (newTheme: Theme | string) => {
+    if (typeof newTheme === "string" && (newTheme === "dark" || newTheme === "light" || newTheme === "pastel")) {
+      setThemeState(newTheme)
     }
-    return "dark"
-  })
+  }
 
   useEffect(() => {
     localStorage.setItem("theme", theme)

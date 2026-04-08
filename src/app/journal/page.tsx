@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import Link from "next/link"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
-import { ThemeSwitcher } from "@/components/ThemeSwitcher"
+import { Sidebar } from "@/components/Sidebar"
+import { useSearchParams } from "next/navigation"
 
 interface JournalEntry {
   id: string
@@ -86,56 +87,50 @@ function Calendar({ selectedDate, onSelectDate, entries, theme }: { selectedDate
   )
 }
 
-export default function Journal() {
+function JournalContent() {
   const { theme } = useTheme()
   const t = themeClasses[theme]
-  const [entries, setEntries] = useState<JournalEntry[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("journal-entries")
-      return saved ? JSON.parse(saved) : []
-    }
-    return []
-  })
+  const searchParams = useSearchParams()
+  const [entries, setEntries] = useState<JournalEntry[]>([])
+  const [isLoaded, setIsLoaded] = useState(false)
   const [currentEntry, setCurrentEntry] = useState<JournalEntry | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState("")
   const [showHistory, setShowHistory] = useState(false)
-  const [aiHistory, setAiHistory] = useState<AIHistoryItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ai-history")
-      return saved ? JSON.parse(saved) : []
-    }
-    return []
-  })
+  const [aiHistory, setAiHistory] = useState<AIHistoryItem[]>([])
   const [aiPrompt, setAiPrompt] = useState("")
   const [aiResponse, setAiResponse] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
   const [aiMode, setAiMode] = useState<"text" | "image">("text")
   const [saveAsModal, setSaveAsModal] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
+  const [selectedDate, setSelectedDate] = useState(searchParams.get("date") || new Date().toISOString().split("T")[0])
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
+    const saved = localStorage.getItem("journal-entries")
+    if (saved) setEntries(JSON.parse(saved))
+    const savedHistory = localStorage.getItem("ai-history")
+    if (savedHistory) setAiHistory(JSON.parse(savedHistory))
+    setIsLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoaded) return
     const entryForDate = entries.find(e => e.date === selectedDate)
     if (entryForDate) {
-      // Use requestAnimationFrame to avoid synchronous setState in effect
-      requestAnimationFrame(() => {
-        setCurrentEntry(entryForDate)
-        setEditTitle(entryForDate.title)
-        setEditContent(entryForDate.content)
-        setIsEditing(true)
-      })
+      setCurrentEntry(entryForDate)
+      setEditTitle(entryForDate.title)
+      setEditContent(entryForDate.content)
+      setIsEditing(true)
     } else {
-      requestAnimationFrame(() => {
-        setCurrentEntry(null)
-        setEditTitle("")
-        setEditContent("")
-        setIsEditing(false)
-      })
+      setCurrentEntry(null)
+      setEditTitle("")
+      setEditContent("")
+      setIsEditing(false)
     }
-  }, [selectedDate, entries])
+  }, [selectedDate, entries, isLoaded])
 
   const saveEntries = (newEntries: JournalEntry[]) => {
     setEntries(newEntries)
@@ -274,6 +269,16 @@ export default function Journal() {
         timestamp: new Date().toISOString(),
       }
       saveAiHistory([historyItem, ...aiHistory])
+      
+      const galleryItem = {
+        id: Date.now().toString(),
+        url: imageUrl,
+        prompt: aiPrompt,
+        createdAt: new Date().toISOString(),
+      }
+      const savedGallery = localStorage.getItem("gallery-images")
+      const galleryImages = savedGallery ? JSON.parse(savedGallery) : []
+      localStorage.setItem("gallery-images", JSON.stringify([galleryItem, ...galleryImages]))
     } catch (err) {
       setAiResponse("Error: " + (err as Error).message)
     }
@@ -290,13 +295,15 @@ export default function Journal() {
 
   return (
     <div className={`min-h-screen ${t.bg} flex transition-colors`}>
+      <Sidebar />
+      
+      {/* Journal-specific Sidebar */}
       <aside className={`w-64 ${t.card} border-r p-4 overflow-y-auto flex flex-col ${t.border}`}>
         <div className="flex items-center justify-between mb-4">
-          <Link href="/dashboard" className="text-blue-500 hover:underline text-sm">← Back</Link>
-          <ThemeSwitcher />
+          <Link href="/dashboard" className="text-blue-500 hover:underline text-sm">← Dashboard</Link>
         </div>
         <div className="flex items-center justify-between mb-2">
-          {entries.length > 0 && (
+          {isLoaded && entries.length > 0 && (
             <button onClick={() => setShowDeleteConfirm(true)} className="text-red-500 text-xs hover:underline">Clear All</button>
           )}
         </div>
@@ -308,14 +315,14 @@ export default function Journal() {
             onClick={createNew}
             className={`w-full mb-4 px-4 py-2 rounded-lg hover:opacity-90 text-white bg-gradient-to-r ${t.accent}`}
           >
-            {entries.find(e => e.date === selectedDate) ? "Edit Entry" : "Add Entry"}
+            {isLoaded && entries.find(e => e.date === selectedDate) ? "Edit Entry" : "Add Entry"}
           </button>
         </div>
 
         <div className="flex-1 mt-4">
           <h3 className={`font-medium text-sm mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Recent Entries</h3>
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {entries.slice(0, 10).map((entry) => (
+            {isLoaded && entries.slice(0, 10).map((entry) => (
               <div
                 key={entry.id}
                 className={`p-2 rounded-lg cursor-pointer border text-xs ${t.card} ${t.border} ${currentEntry?.id === entry.id ? "bg-blue-50 border-blue-300" : "hover:bg-gray-50"}`}
@@ -336,7 +343,7 @@ export default function Journal() {
         </button>
       </aside>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <nav className={`${t.nav} border-b p-4 flex justify-between items-center ${t.border}`}>
           <div className="flex items-center gap-4">
             <h1 className={`text-xl font-bold ${t.text}`}>Journal</h1>
@@ -351,8 +358,8 @@ export default function Journal() {
           )}
         </nav>
 
-        <div className="flex-1 flex">
-          <div className="flex-1 p-6">
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 p-6 overflow-y-auto">
             {isEditing && currentEntry ? (
               <div className="h-full flex flex-col">
                 <input
@@ -367,7 +374,7 @@ export default function Journal() {
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   placeholder="Write in Markdown..."
-                  className={`flex-1 p-4 border rounded-lg resize-none font-mono ${t.input}`}
+                  className={`flex-1 p-4 border rounded-lg resize-none font-mono min-h-[300px] ${t.input}`}
                 />
               </div>
             ) : (
@@ -381,7 +388,7 @@ export default function Journal() {
             )}
           </div>
 
-          <div className={`w-96 border-l ${t.card} p-4 flex flex-col ${t.border}`}>
+          <div className={`w-96 border-l ${t.card} p-4 flex flex-col ${t.border} overflow-y-auto`}>
             <h2 className={`font-bold mb-4 ${t.text}`}>AI Assistant</h2>
 
             <div className="flex gap-2 mb-4">
@@ -456,7 +463,7 @@ export default function Journal() {
       </main>
 
       {saveAsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className={`${t.card} p-6 rounded-xl w-96`}>
             <h3 className={`font-bold mb-4 ${t.text}`}>Save As New Entry</h3>
             <input
@@ -476,7 +483,7 @@ export default function Journal() {
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className={`${t.card} p-6 rounded-xl w-96`}>
             <h3 className={`font-bold mb-4 ${t.text}`}>Delete All Entries?</h3>
             <p className={`mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>This will permanently delete all {entries.length} journal entries.</p>
@@ -488,5 +495,17 @@ export default function Journal() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function Journal() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-slate-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <JournalContent />
+    </Suspense>
   )
 }

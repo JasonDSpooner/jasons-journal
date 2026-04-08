@@ -2,32 +2,87 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useSession, signIn, signOut } from "next-auth/react"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
-import { ThemeSwitcher } from "@/components/ThemeSwitcher"
+
+const themes = [
+  { key: "dark", label: "Dark", icon: "🌙" },
+  { key: "light", label: "Light", icon: "☀️" },
+  { key: "pastel", label: "Pastel", icon: "🌸" },
+]
 
 export default function Home() {
-  const { theme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const sessionData = useSession()
+  const session = sessionData?.data
+  const status = sessionData?.status || "loading"
   const t = themeClasses[theme]
   const [showAbout, setShowAbout] = useState(false)
+
+  const currentIndex = themes.findIndex(t => t.key === theme)
+  const nextTheme = themes[(currentIndex + 1) % themes.length]
+
+  const isLoading = status === "loading"
+  const isAuthenticated = status === "authenticated"
 
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900" : t.bg} transition-colors`}>
       <nav className="p-6 flex justify-between items-center">
         <h1 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : t.text}`}>Jason&apos;s Journal</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTheme(nextTheme.key as "dark" | "light" | "pastel")}
+            className={`px-3 py-2 rounded-lg transition ${theme === "dark" ? "text-gray-300 hover:text-white bg-white/5" : "text-gray-600 hover:text-gray-900 bg-gray-100"}`}
+            title={`Switch to ${nextTheme.label}`}
+          >
+            {themes.find(t => t.key === theme)?.icon}
+          </button>
           <button
             onClick={() => setShowAbout(true)}
             className={`px-4 py-2 rounded-lg transition ${theme === "dark" ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
           >
             About
           </button>
-          <ThemeSwitcher />
-          <Link 
-            href="/dashboard"
-            className={`px-4 py-2 rounded-lg transition ${theme === "dark" ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-blue-500 text-white hover:bg-blue-600"}`}
-          >
-            Enter App
-          </Link>
+          
+          {isLoading ? (
+            <span className={`px-4 py-2 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Loading...</span>
+          ) : isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              {session?.user?.image && (
+                <img src={session.user.image} alt="Profile" className="w-8 h-8 rounded-full" />
+              )}
+              <span className={`hidden sm:inline ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                {session?.user?.name?.split(" ")[0]}
+              </span>
+              <Link 
+                href="/dashboard"
+                className={`px-4 py-2 rounded-lg transition ${theme === "dark" ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => signIn("google")}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              >
+                Sign In with Google
+              </button>
+              <button
+                onClick={() => signIn("github")}
+                className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition"
+              >
+                Sign In with GitHub
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -41,21 +96,31 @@ export default function Home() {
             AI text & image generation, and markdown journaling.
           </p>
 
-          <Link 
-            href="/dashboard"
-            className="px-8 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition text-lg"
-          >
-            Get Started
-          </Link>
+          {isAuthenticated ? (
+            <Link 
+              href="/dashboard"
+              className="px-8 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition text-lg"
+            >
+              Go to Dashboard
+            </Link>
+          ) : (
+            <button
+              onClick={() => signIn("google")}
+              className="px-8 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition text-lg"
+            >
+              Get Started with Google
+            </button>
+          )}
         </div>
 
         <div className="mt-20 grid md:grid-cols-3 gap-8">
           {[
             { title: "Dashboard", desc: "Personal stats & quick actions", icon: "📊" },
-            { title: "AI Tools", desc: "Text & image generation", icon: "🎨" },
+            { title: "Media", desc: "Skills, social & contact", icon: "📱" },
+            { title: "Mailbox", desc: "Your messages", icon: "📬" },
             { title: "Journal", desc: "Markdown entries", icon: "📝" },
             { title: "Gallery", desc: "Generated images", icon: "🖼️" },
-            { title: "Skills", desc: "Share your expertise", icon: "💡" },
+            { title: "AI Tools", desc: "Text & image generation", icon: "🎨" },
           ].map((feature) => (
             <div key={feature.title} className={theme === "dark" ? "bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10" : `${t.card} p-6 rounded-xl border ${t.border}`}>
               <span className="text-3xl">{feature.icon}</span>
