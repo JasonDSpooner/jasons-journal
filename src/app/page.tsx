@@ -231,6 +231,25 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className={`border-t ${t.border} py-8 mt-12`}>
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+              © {new Date().getFullYear()} Jason&apos;s Journal. All rights reserved.
+            </p>
+            <div className="flex items-center gap-6">
+              <Link href="/privacy" className="text-sm text-blue-500 hover:underline">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-sm text-blue-500 hover:underline">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
