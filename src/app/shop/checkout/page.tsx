@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const { theme } = useTheme()
   const t = themeClasses[theme]
   const searchParams = useSearchParams()
@@ -79,4 +79,16 @@ export default function CheckoutPage() {
   }
 
   return null
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
+  )
 }

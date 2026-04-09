@@ -19,6 +19,7 @@ export default function Settings() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [lastSynced, setLastSynced] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [apiKey, setApiKey] = useState("")
 
   useEffect(() => {
     const loadStats = async () => {
@@ -35,6 +36,9 @@ export default function Settings() {
       }
     }
     loadStats()
+    
+    const savedKey = localStorage.getItem("pollinations-api-key")
+    if (savedKey) setApiKey(savedKey)
   }, [])
 
   const handleExport = async (format: "json" | "markdown") => {
@@ -219,11 +223,11 @@ export default function Settings() {
             <input
               type="password"
               placeholder="Enter your Pollinations.ai API key"
-              value={localStorage.getItem("pollinations-api-key") || ""}
-              onChange={(e) => localStorage.setItem("pollinations-api-key", e.target.value)}
+              value={apiKey}
+              onChange={(e) => { setApiKey(e.target.value); localStorage.setItem("pollinations-api-key", e.target.value) }}
               className={`w-full p-3 border rounded-lg ${t.input}`}
             />
-            {localStorage.getItem("pollinations-api-key") && (
+            {apiKey && (
               <p className="text-green-500 text-sm mt-2">✓ API key configured</p>
             )}
           </section>

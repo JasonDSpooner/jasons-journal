@@ -1,12 +1,13 @@
 "use client"
 
+import { Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useEffect } from "react"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
 import { clearCart } from "@/lib/cart"
 
-export default function SuccessPage() {
+function SuccessContent() {
   const { theme } = useTheme()
   const t = themeClasses[theme]
   const searchParams = useSearchParams()
@@ -48,5 +49,17 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }

@@ -6,7 +6,8 @@ import { useTheme, themeClasses } from "@/components/ThemeProvider"
 import { Sidebar } from "@/components/Sidebar"
 import { CartDrawer, CartButton } from "@/components/Cart"
 import { addToCart, getCart, CartItem } from "@/lib/cart"
-import { products, Product } from "@/lib/products"
+import { products } from "@/lib/products"
+import { Product } from "@/lib/cart"
 
 export default function Shop() {
   const { theme } = useTheme()
