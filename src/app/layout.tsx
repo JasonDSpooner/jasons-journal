@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Providers } from "@/components/Providers";
+import { DonationMeter } from "@/components/DonationMeter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>{children}</ThemeProvider>
         </Providers>
+        <DonationMeter />
         <script
           dangerouslySetInnerHTML={{
             __html: `

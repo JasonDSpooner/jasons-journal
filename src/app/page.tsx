@@ -246,6 +246,9 @@ export default function Home() {
               <Link href="/terms" className="text-sm text-blue-500 hover:underline">
                 Terms of Service
               </Link>
+              <Link href="/changelog" className="text-sm text-blue-500 hover:underline">
+                Changelog
+              </Link>
             </div>
           </div>
         </div>

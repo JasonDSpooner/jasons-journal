@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
 import { Sidebar } from "@/components/Sidebar"
 import { useSearchParams } from "next/navigation"
+import { buildPollinationsUrl, buildImagePollinationsUrl } from "@/lib/pollinations"
 
 interface JournalEntry {
   id: string
@@ -236,7 +237,8 @@ function JournalContent() {
     setAiLoading(true)
     setAiResponse("")
     try {
-      const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(aiPrompt)}?model=openai`)
+      const url = buildPollinationsUrl(aiPrompt, { model: "openai" })
+      const res = await fetch(url)
       const text = await res.text()
       setAiResponse(text)
       const historyItem: AIHistoryItem = {
@@ -258,8 +260,7 @@ function JournalContent() {
     setAiLoading(true)
     setAiResponse("")
     try {
-      const encodedPrompt = encodeURIComponent(aiPrompt)
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&nologo=true`
+      const imageUrl = buildImagePollinationsUrl(aiPrompt, { width: 1024, height: 1024, model: "flux" })
       setAiResponse(imageUrl)
       const historyItem: AIHistoryItem = {
         id: Date.now().toString(),
@@ -357,6 +358,22 @@ function JournalContent() {
             </div>
           )}
         </nav>
+
+        {!localStorage.getItem("pollinations-api-key") && (
+          <div className={`mx-4 mt-4 p-3 rounded-lg border ${theme === "dark" ? "bg-yellow-900/20 border-yellow-700" : "bg-yellow-50 border-yellow-200"}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span>🐝</span>
+                <span className={`text-sm ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"}`}>
+                  Using free tier — add your Pollinations API key for more!
+                </span>
+              </div>
+              <Link href="/settings" className="text-xs text-blue-500 hover:underline">
+                Add Key →
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 p-6 overflow-y-auto">

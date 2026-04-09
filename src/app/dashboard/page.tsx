@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
 import { Sidebar } from "@/components/Sidebar"
+import { OnboardingWizard } from "@/components/OnboardingWizard"
 import { useEffect, useState } from "react"
 
 interface JournalEntry {
@@ -24,7 +25,6 @@ interface GalleryImage {
 interface Stats {
   journalCount: number
   galleryCount: number
-  skillsCount: number
   messagesCount: number
 }
 
@@ -34,7 +34,7 @@ export default function Dashboard() {
   const session = sessionData?.data
   const t = themeClasses[theme]
   
-  const [stats, setStats] = useState<Stats>({ journalCount: 0, galleryCount: 0, skillsCount: 0, messagesCount: 0 })
+  const [stats, setStats] = useState<Stats>({ journalCount: 0, galleryCount: 0, messagesCount: 0 })
   const [recentEntries, setRecentEntries] = useState<JournalEntry[]>([])
   const [recentImages, setRecentImages] = useState<GalleryImage[]>([])
 
@@ -42,18 +42,15 @@ export default function Dashboard() {
     // Load stats from localStorage
     const journalData = localStorage.getItem("journal-entries")
     const galleryData = localStorage.getItem("gallery-images")
-    const skillsData = localStorage.getItem("media-skills")
     const messagesData = localStorage.getItem("mailbox-messages")
 
     const entries: JournalEntry[] = journalData ? JSON.parse(journalData) : []
     const images: GalleryImage[] = galleryData ? JSON.parse(galleryData) : []
-    const skills = skillsData ? JSON.parse(skillsData) : []
     const messages = messagesData ? JSON.parse(messagesData) : []
 
     setStats({
       journalCount: entries.length,
       galleryCount: images.length,
-      skillsCount: skills.length,
       messagesCount: messages.length,
     })
 
@@ -67,6 +64,7 @@ export default function Dashboard() {
 
   return (
     <div className={`min-h-screen ${t.bg} transition-colors flex`}>
+      <OnboardingWizard />
       <Sidebar />
       
       <main className="flex-1 overflow-y-auto">
@@ -107,7 +105,7 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             <Link href="/journal">
               <div className={`${t.card} p-4 rounded-xl border ${t.border} text-center hover:shadow-md transition`}>
                 <p className="text-3xl font-bold text-blue-500">{stats.journalCount}</p>
@@ -118,12 +116,6 @@ export default function Dashboard() {
               <div className={`${t.card} p-4 rounded-xl border ${t.border} text-center hover:shadow-md transition`}>
                 <p className="text-3xl font-bold text-purple-500">{stats.galleryCount}</p>
                 <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Gallery Images</p>
-              </div>
-            </Link>
-            <Link href="/media">
-              <div className={`${t.card} p-4 rounded-xl border ${t.border} text-center hover:shadow-md transition`}>
-                <p className="text-3xl font-bold text-green-500">{stats.skillsCount}</p>
-                <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Skills</p>
               </div>
             </Link>
             <Link href="/mailbox">
@@ -183,9 +175,9 @@ export default function Dashboard() {
           <h2 className={`text-xl font-bold mb-4 ${t.text}`}>Quick Access</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { href: "/media", title: "Media", desc: "Skills, social & contact", icon: "📱" },
-              { href: "/ai-connections", title: "AI Connect", desc: "BYOA - Bring Your Own Agent", icon: "🔗" },
-              { href: "/portfolio", title: "Portfolio", desc: "Public skill showcase", icon: "👤" },
+              { href: "/shop", title: "Shop", desc: "Dev tools & gear", icon: "🛒" },
+              { href: "/friends", title: "Friends", desc: "Creative network", icon: "👥" },
+              { href: "/ai", title: "AI Tools", desc: "Generate content", icon: "🎨" },
             ].map((item) => (
               <Link 
                 key={item.href}

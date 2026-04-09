@@ -8,14 +8,16 @@ import { useState } from "react"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/about", label: "About Jason", icon: "👤" },
   { href: "/journal", label: "Journal", icon: "📝" },
   { href: "/gallery", label: "Gallery", icon: "🖼️" },
   { href: "/ai", label: "AI Tools", icon: "🎨" },
   { href: "/ai-connections", label: "AI Connect", icon: "🔗" },
-  { href: "/media", label: "Media", icon: "📱" },
+  { href: "/shop", label: "Shop", icon: "🛒" },
+  { href: "/friends", label: "Friends", icon: "👥" },
   { href: "/mailbox", label: "Mailbox", icon: "📬" },
-  { href: "/portfolio", label: "Portfolio", icon: "👤" },
   { href: "/settings", label: "Settings", icon: "⚙️" },
+  { href: "/donate", label: "Donate", icon: "💝" },
 ]
 
 export function Sidebar() {

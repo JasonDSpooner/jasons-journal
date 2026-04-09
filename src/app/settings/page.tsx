@@ -10,7 +10,7 @@ import { Sidebar } from "@/components/Sidebar"
 export default function Settings() {
   const { theme, setTheme } = useTheme()
   const t = themeClasses[theme]
-  const [stats, setStats] = useState({ journal: 0, gallery: 0, skills: 0, messages: 0 })
+  const [stats, setStats] = useState({ journal: 0, gallery: 0, messages: 0 })
   const [exporting, setExporting] = useState(false)
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
@@ -27,7 +27,6 @@ export default function Settings() {
         setStats({
           journal: data.journal.length,
           gallery: data.gallery.length,
-          skills: data.media?.skills?.length || 0,
           messages: data.mailbox.length,
         })
         setLastSynced(getLastSynced())
@@ -90,23 +89,16 @@ export default function Settings() {
         throw new Error("Invalid file format. Missing required fields.")
       }
 
-      // Import data to localStorage
+        // Import data to localStorage
+      if (!data.journal || !data.gallery || !data.mailbox) {
+        throw new Error("Invalid file format. Missing required fields.")
+      }
+
       if (Array.isArray(data.journal)) {
         localStorage.setItem("journal-entries", JSON.stringify(data.journal))
       }
       if (Array.isArray(data.gallery)) {
         localStorage.setItem("gallery-images", JSON.stringify(data.gallery))
-      }
-      if (data.media) {
-        if (Array.isArray(data.media.skills)) {
-          localStorage.setItem("media-skills", JSON.stringify(data.media.skills))
-        }
-        if (Array.isArray(data.media.socialLinks)) {
-          localStorage.setItem("media-social", JSON.stringify(data.media.socialLinks))
-        }
-        if (data.media.contact) {
-          localStorage.setItem("media-contact", JSON.stringify(data.media.contact))
-        }
       }
       if (Array.isArray(data.mailbox)) {
         localStorage.setItem("mailbox-messages", JSON.stringify(data.mailbox))
@@ -118,7 +110,6 @@ export default function Settings() {
       setStats({
         journal: newData.journal.length,
         gallery: newData.gallery.length,
-        skills: newData.media?.skills?.length || 0,
         messages: newData.mailbox.length,
       })
     } catch (error) {
@@ -158,7 +149,6 @@ export default function Settings() {
       setStats({
         journal: data.journal.length,
         gallery: data.gallery.length,
-        skills: data.media?.skills?.length || 0,
         messages: data.mailbox.length,
       })
     } else {
@@ -213,6 +203,32 @@ export default function Settings() {
           </section>
 
           <section className={`${t.card} p-6 rounded-xl border ${t.border} mb-6`}>
+            <h2 className={`text-lg font-semibold mb-2 ${t.text}`}>Pollinations.ai API Key</h2>
+            <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+              Enter your own Pollinations.ai API key to use your account's quota and features. 
+              Without a key, the app uses free endpoints with limited functionality.
+            </p>
+            <a 
+              href="https://pollinations.ai/api-key" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline text-sm block mb-4"
+            >
+              Get your free API key from Pollinations.ai →
+            </a>
+            <input
+              type="password"
+              placeholder="Enter your Pollinations.ai API key"
+              value={localStorage.getItem("pollinations-api-key") || ""}
+              onChange={(e) => localStorage.setItem("pollinations-api-key", e.target.value)}
+              className={`w-full p-3 border rounded-lg ${t.input}`}
+            />
+            {localStorage.getItem("pollinations-api-key") && (
+              <p className="text-green-500 text-sm mt-2">✓ API key configured</p>
+            )}
+          </section>
+
+          <section className={`${t.card} p-6 rounded-xl border ${t.border} mb-6`}>
             <h2 className={`text-lg font-semibold mb-4 ${t.text}`}>Your Data</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className={`p-4 rounded-lg ${theme === "dark" ? "bg-slate-700" : "bg-gray-100"}`}>
@@ -222,10 +238,6 @@ export default function Settings() {
               <div className={`p-4 rounded-lg ${theme === "dark" ? "bg-slate-700" : "bg-gray-100"}`}>
                 <p className="text-2xl font-bold">{stats.gallery}</p>
                 <p className="text-sm opacity-70">Gallery Images</p>
-              </div>
-              <div className={`p-4 rounded-lg ${theme === "dark" ? "bg-slate-700" : "bg-gray-100"}`}>
-                <p className="text-2xl font-bold">{stats.skills}</p>
-                <p className="text-sm opacity-70">Skills</p>
               </div>
               <div className={`p-4 rounded-lg ${theme === "dark" ? "bg-slate-700" : "bg-gray-100"}`}>
                 <p className="text-2xl font-bold">{stats.messages}</p>

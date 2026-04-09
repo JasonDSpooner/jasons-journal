@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
 import { Sidebar } from "@/components/Sidebar"
+import { getPollinationsApiKey, checkPollinationsStatus } from "@/lib/pollinations"
 
 interface AIConnection {
   id: string
@@ -15,7 +16,7 @@ interface AIConnection {
 }
 
 const defaultConnections: AIConnection[] = [
-  { id: "pollinations", name: "Pollinations.ai (Free)", type: "pollinations", enabled: true },
+  { id: "pollinations", name: "Pollinations.ai", type: "pollinations", enabled: true },
 ]
 
 const presetProviders = [
@@ -34,6 +35,7 @@ export default function AIConnections() {
   const [testPrompt, setTestPrompt] = useState("")
   const [testResult, setTestResult] = useState("")
   const [testing, setTesting] = useState(false)
+  const [pollinStatus, setPollinStatus] = useState<{ connected: boolean; level: string }>({ connected: false, level: "Free" })
 
   useEffect(() => {
     const saved = localStorage.getItem("ai-connections")
@@ -42,6 +44,7 @@ export default function AIConnections() {
     } else {
       setConnections(defaultConnections)
     }
+    checkPollinationsStatus().then(setPollinStatus)
   }, [])
 
   const saveConnections = useCallback((newConnections: AIConnection[]) => {
@@ -182,6 +185,28 @@ export default function AIConnections() {
         </nav>
 
         <div className="container mx-auto p-8">
+          {!pollinStatus.connected && (
+            <div className={`mb-6 p-4 rounded-lg border ${theme === "dark" ? "bg-yellow-900/20 border-yellow-700" : "bg-yellow-50 border-yellow-200"}`}>
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🐝</span>
+                <div className="flex-1">
+                  <h3 className={`font-semibold ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"}`}>
+                    Bring Your Own Pollinations
+                  </h3>
+                  <p className={`text-sm mt-1 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                    You&apos;re using free endpoints. Add your own API key for higher limits, faster generation, and more features!
+                  </p>
+                  <Link 
+                    href="/settings" 
+                    className="inline-block mt-2 text-sm text-blue-500 hover:underline"
+                  >
+                    Add your API key in Settings →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className={`${t.card} p-4 rounded-xl border ${t.border} mb-6`}>
             <h2 className={`text-lg font-semibold mb-3 ${t.text}`}>Bring Your Own Agent</h2>
             <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>

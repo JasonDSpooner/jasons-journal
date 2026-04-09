@@ -55,11 +55,6 @@ export async function syncFromCloud(): Promise<{ success: boolean; error?: strin
     if (data.gallery) {
       localStorage.setItem("gallery-images", JSON.stringify(data.gallery))
     }
-    if (data.media) {
-      localStorage.setItem("media-skills", JSON.stringify(data.media.skills || []))
-      localStorage.setItem("media-social", JSON.stringify(data.media.socialLinks || []))
-      localStorage.setItem("media-contact", JSON.stringify(data.media.contact || {}))
-    }
     if (data.mailbox) {
       localStorage.setItem("mailbox-messages", JSON.stringify(data.mailbox))
     }

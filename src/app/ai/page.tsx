@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useTheme, themeClasses } from "@/components/ThemeProvider"
 import { Sidebar } from "@/components/Sidebar"
+import { buildPollinationsUrl, buildImagePollinationsUrl, getPollinationsApiKey, checkPollinationsStatus, hasPollinationsKey } from "@/lib/pollinations"
 
 export default function AITools() {
   const { theme } = useTheme()
@@ -13,12 +14,18 @@ export default function AITools() {
   const [generatedImage, setGeneratedImage] = useState("")
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<"text" | "image">("text")
+  const [pollinStatus, setPollinStatus] = useState<{ connected: boolean; level: string }>({ connected: false, level: "Free" })
+
+  useEffect(() => {
+    checkPollinationsStatus().then(setPollinStatus)
+  }, [])
 
   const generateText = async () => {
     if (!prompt.trim()) return
     setLoading(true)
     try {
-      const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai`)
+      const url = buildPollinationsUrl(prompt, { model: "openai" })
+      const res = await fetch(url)
       const text = await res.text()
       setGeneratedText(text)
     } catch (err) {
@@ -31,8 +38,8 @@ export default function AITools() {
     if (!prompt.trim()) return
     setLoading(true)
     try {
-      const encodedPrompt = encodeURIComponent(prompt)
-      setGeneratedImage(`https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&nologo=true`)
+      const url = buildImagePollinationsUrl(prompt, { width: 1024, height: 1024, model: "flux" })
+      setGeneratedImage(url)
     } catch {
       setGeneratedImage("")
     }
@@ -50,7 +57,35 @@ export default function AITools() {
         </nav>
 
         <div className="container mx-auto p-8">
-          <h2 className={`text-2xl font-bold mb-6 ${t.text}`}>AI Generation</h2>
+          {!pollinStatus.connected && (
+            <div className={`mb-6 p-4 rounded-lg border ${theme === "dark" ? "bg-yellow-900/20 border-yellow-700" : "bg-yellow-50 border-yellow-200"}`}>
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🐝</span>
+                <div className="flex-1">
+                  <h3 className={`font-semibold ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"}`}>
+                    Get Your Own Pollinations API Key
+                  </h3>
+                  <p className={`text-sm mt-1 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                    You&apos;re on the free tier. Add your API key for higher limits, faster generation, and more models!
+                  </p>
+                  <Link 
+                    href="/settings" 
+                    className="inline-block mt-2 text-sm text-blue-500 hover:underline"
+                  >
+                    Add API Key in Settings →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mb-6">
+            <h2 className={`text-2xl font-bold ${t.text}`}>AI Generation</h2>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${pollinStatus.connected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+              <span className="text-sm">🐝</span>
+              <span className="text-sm font-medium">{pollinStatus.connected ? pollinStatus.level : "Free (No Key)"}</span>
+            </div>
+          </div>
 
           <div className="flex gap-2 mb-6">
             <button
